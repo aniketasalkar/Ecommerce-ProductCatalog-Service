@@ -12,4 +12,5 @@ public interface IProductService {
     List<Product> getAllProducts();
     Product updateProduct(Long id, ProductPatchRequestDto productPatchRequestDto);
     void deleteProduct(Long id);
+    List<Product> addproductsBulk(List<ProductRequestDto> productRequestDtos);
 }

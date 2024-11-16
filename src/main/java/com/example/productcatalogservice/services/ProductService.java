@@ -4,6 +4,7 @@ import com.example.productcatalogservice.dtos.CategoryRequestDto;
 import com.example.productcatalogservice.dtos.ProductPatchRequestDto;
 import com.example.productcatalogservice.dtos.ProductRequestDto;
 import com.example.productcatalogservice.exceptions.AlreadyExistsException;
+import com.example.productcatalogservice.exceptions.EmptyDataException;
 import com.example.productcatalogservice.exceptions.NotFoundException;
 import com.example.productcatalogservice.exceptions.UnauthorizedException;
 import com.example.productcatalogservice.models.Category;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -113,6 +115,19 @@ public class ProductService implements IProductService {
         }
 
         productRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Product> addproductsBulk(List<ProductRequestDto> productRequestDtos) {
+        if (productRequestDtos.isEmpty()) {
+            throw new EmptyDataException("Product request is empty");
+        }
+        List<Product> createdProducts = new ArrayList<>();
+        for (ProductRequestDto productRequestDto : productRequestDtos) {
+            createdProducts.add(createProduct(productRequestDto));
+        }
+
+        return createdProducts;
     }
 
     private Product from (ProductRequestDto productRequestDto) {

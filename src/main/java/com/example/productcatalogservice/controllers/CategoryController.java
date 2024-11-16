@@ -67,6 +67,27 @@ public class CategoryController {
         }
     }
 
+    @PostMapping("/category/bulk")
+    public ResponseEntity<List<CategoryResponseDto>> createCategoriesBulk(@RequestBody @Valid List<CategoryRequestDto> categoryRequestListDto) {
+        List<CategoryResponseDto> createdCategoriesResponse = new ArrayList<>();
+        try {
+            List<Category> categoriesRequested = new ArrayList<>();
+            for (CategoryRequestDto categoryRequestDto : categoryRequestListDto) {
+                categoriesRequested.add(from(categoryRequestDto));
+            }
+
+            List<Category> createdCategories = categoryService.bulkAddCategories(categoriesRequested);
+
+            for (Category category : createdCategories) {
+                createdCategoriesResponse.add(from(category));
+            }
+
+            return new ResponseEntity<>(createdCategoriesResponse, HttpStatus.CREATED);
+        } catch (Exception exception) {
+            throw exception;
+        }
+    }
+
     private Category from(CategoryRequestDto categoryRequestDto) {
         Category category = new Category();
         category.setName(categoryRequestDto.getName());

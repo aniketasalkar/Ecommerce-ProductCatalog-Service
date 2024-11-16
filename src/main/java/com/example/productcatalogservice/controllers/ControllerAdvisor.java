@@ -2,6 +2,7 @@ package com.example.productcatalogservice.controllers;
 
 import com.example.productcatalogservice.dtos.ErrorResponse;
 import com.example.productcatalogservice.exceptions.AlreadyExistsException;
+import com.example.productcatalogservice.exceptions.EmptyDataException;
 import com.example.productcatalogservice.exceptions.NotFoundException;
 import com.example.productcatalogservice.exceptions.UnauthorizedException;
 import org.springframework.http.HttpHeaders;
@@ -63,5 +64,12 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), HttpStatus.CONFLICT.value());
 
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(EmptyDataException.class)
+    public ResponseEntity<ErrorResponse> handleEmptyDataException(EmptyDataException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST.value());
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.productcatalogservice.services;
 
 import com.example.productcatalogservice.exceptions.AlreadyExistsException;
+import com.example.productcatalogservice.exceptions.EmptyDataException;
 import com.example.productcatalogservice.exceptions.NotFoundException;
 import com.example.productcatalogservice.exceptions.UnauthorizedException;
 import com.example.productcatalogservice.models.Category;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -78,5 +80,18 @@ public class CategoryService implements ICategoryService {
     public Category getCategoryByName(String name) {
 
         return categoryRepository.findByName(name).orElseThrow(() -> new NotFoundException("Category with name " + name + " not found"));
+    }
+
+    @Override
+    public List<Category> bulkAddCategories(List<Category> categories) {
+        if (categories.isEmpty()) {
+            throw new EmptyDataException("Category list is empty");
+        }
+        List<Category> createdCategories = new ArrayList<>();
+        for (Category category : categories) {
+            createdCategories.add(createCategory(category));
+        }
+
+        return createdCategories;
     }
 }

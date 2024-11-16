@@ -9,4 +9,5 @@ public interface ICategoryService {
     Category updateCategory(String categoryName, Category category);
     List<Category> getAllCategories();
     Category getCategoryByName(String name);
+    List<Category> bulkAddCategories(List<Category> categories);
 }

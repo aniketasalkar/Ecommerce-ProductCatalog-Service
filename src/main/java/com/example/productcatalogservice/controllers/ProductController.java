@@ -73,6 +73,21 @@ public class ProductController {
         }
     }
 
+    @PostMapping("/products/bulk")
+    public ResponseEntity<List<ProductResponseDto>> createProductsBulk(@RequestBody @Valid List<ProductRequestDto> productRequestDtoList) {
+        List<ProductResponseDto> productResponseDtoList = new ArrayList<>();
+        try {
+            List<Product> createdProducts = productService.addproductsBulk(productRequestDtoList);
+            for (Product product : createdProducts) {
+                productResponseDtoList.add(from(product));
+            }
+
+            return new ResponseEntity<>(productResponseDtoList, HttpStatus.CREATED);
+        } catch (Exception exception) {
+            throw exception;
+        }
+    }
+
     @DeleteMapping("/products/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
         try {
