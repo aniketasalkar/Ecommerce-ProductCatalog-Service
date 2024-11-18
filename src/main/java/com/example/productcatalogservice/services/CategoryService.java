@@ -8,12 +8,12 @@ import com.example.productcatalogservice.models.Category;
 import com.example.productcatalogservice.models.Status;
 import com.example.productcatalogservice.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService implements ICategoryService {
@@ -87,11 +87,33 @@ public class CategoryService implements ICategoryService {
         if (categories.isEmpty()) {
             throw new EmptyDataException("Category list is empty");
         }
-        List<Category> createdCategories = new ArrayList<>();
-        for (Category category : categories) {
-            createdCategories.add(createCategory(category));
+
+        Set<Category> categoriesSet = new HashSet<>(categories);
+        Set<String> categoriesNameSet = categoriesSet.stream().map(Category::getName).collect(Collectors.toSet());
+
+        Set<Category> categoriesList = categoryRepository.findByNameIn(categoriesSet.stream()
+                .map(Category::getName).collect(Collectors.toList())).stream().collect(Collectors.toSet());
+
+        List<Category> createCategories = new ArrayList<>();
+        for (Category category : categoriesSet) {
+            if (!categoriesList.stream().map(Category::getName).collect(Collectors.toSet()).contains(category.getName())) {
+                createCategories.add(category);
+            } else {
+                categoriesNameSet.remove(category.getName());
+            }
+        }
+        for (Category category : createCategories) {
+            Date currentDate = new Date();
+            category.setCreatedAt(currentDate);
+            category.setUpdatedAt(currentDate);
+        }
+        List<Category> savedCategories = null;
+        try {
+            savedCategories = categoryRepository.saveAllAndFlush(createCategories);
+        } catch (DataIntegrityViolationException exception) {
+            exception.getMessage();
         }
 
-        return createdCategories;
+        return savedCategories;
     }
 }

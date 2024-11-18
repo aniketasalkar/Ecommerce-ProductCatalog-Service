@@ -22,7 +22,7 @@ public class Category extends BaseModel {
     @NotNull
     private String description;
 
-    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY, orphanRemoval = true)
     @Fetch(FetchMode.SELECT)
     private List<Product> products;
 }
