@@ -1,5 +1,6 @@
 package com.example.productcatalogservice.models;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
@@ -23,7 +24,7 @@ public class Product extends BaseModel {
     private String imageUrl;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     private Category category;
 
     @NotNull

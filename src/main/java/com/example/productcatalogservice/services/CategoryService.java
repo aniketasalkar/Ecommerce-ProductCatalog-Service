@@ -109,7 +109,7 @@ public class CategoryService implements ICategoryService {
         }
         List<Category> savedCategories = null;
         try {
-            savedCategories = categoryRepository.saveAllAndFlush(createCategories);
+            savedCategories = categoryRepository.saveAll(createCategories);
         } catch (DataIntegrityViolationException exception) {
             exception.getMessage();
         }

@@ -2,6 +2,7 @@ package com.example.productcatalogservice.controllers;
 
 import com.example.productcatalogservice.dtos.CategoryRequestDto;
 import com.example.productcatalogservice.dtos.CategoryResponseDto;
+import com.example.productcatalogservice.exceptions.AlreadyExistsException;
 import com.example.productcatalogservice.models.Category;
 import com.example.productcatalogservice.services.CategoryService;
 import jakarta.validation.Valid;
@@ -77,6 +78,9 @@ public class CategoryController {
             }
 
             List<Category> createdCategories = categoryService.bulkAddCategories(categoriesRequested);
+            if (createdCategories.size() == 0) {
+                throw new AlreadyExistsException("All the Categories already exists");
+            }
 
             for (Category category : createdCategories) {
                 createdCategoriesResponse.add(from(category));

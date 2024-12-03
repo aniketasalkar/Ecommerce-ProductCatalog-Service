@@ -13,21 +13,25 @@ import com.example.productcatalogservice.models.ProductSpecification;
 import com.example.productcatalogservice.models.Status;
 import com.example.productcatalogservice.repository.CategoryRepository;
 import com.example.productcatalogservice.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService implements IProductService {
 
     @Autowired
     ProductRepository productRepository;
+
     @Autowired
     CategoryRepository categoryRepository;
+
+    @Autowired
+    CategoryService categoryService;
 
     @Override
     public Product createProduct(ProductRequestDto productRequestDto) {
@@ -117,17 +121,46 @@ public class ProductService implements IProductService {
         productRepository.deleteById(id);
     }
 
+    @Transactional
     @Override
     public List<Product> addproductsBulk(List<ProductRequestDto> productRequestDtos) {
         if (productRequestDtos.isEmpty()) {
             throw new EmptyDataException("Product request is empty");
         }
-        List<Product> createdProducts = new ArrayList<>();
-        for (ProductRequestDto productRequestDto : productRequestDtos) {
-            createdProducts.add(createProduct(productRequestDto));
+
+        List<Category> categoriesToBeCreated = new ArrayList<>();
+
+        Set<ProductRequestDto> productDtos = productRequestDtos.stream().collect(Collectors.toSet());
+        List<Product> products = new ArrayList<>();
+        for (ProductRequestDto productRequestDto : productDtos) {
+            Product product = from(productRequestDto);
+            product.setProductSpecification(ProductSpecification.ALL);
+            product.setStatus(Status.ACTIVE);
+
+            Date currentTime = new Date();
+            product.setCreatedAt(currentTime);
+            product.setUpdatedAt(currentTime);
+
+            products.add(product);
+
+            // Category Operations
+            categoriesToBeCreated.add(product.getCategory());
         }
 
-        return createdProducts;
+
+        List<Product> newProducts = null;
+        try {
+            categoryService.bulkAddCategories(categoriesToBeCreated);
+            for (Product product : products) {
+                product.setCategory(categoryRepository.findByName(product.getCategory().getName()).get());
+            }
+            newProducts = productRepository.saveAll(products);
+        } catch (Exception exception) {
+            System.out.println(exception.getMessage());
+            System.out.println("Product Exception");
+        }
+
+        return newProducts;
     }
 
     private Product from (ProductRequestDto productRequestDto) {
