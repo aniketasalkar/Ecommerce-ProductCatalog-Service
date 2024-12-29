@@ -1,6 +1,7 @@
 package com.example.productcatalogservice.services;
 
-import com.example.productcatalogservice.dtos.CategoryRequestDto;
+import com.example.productcatalogservice.clients.KafkaProducerClient;
+import com.example.productcatalogservice.dtos.InventoryDto;
 import com.example.productcatalogservice.dtos.ProductPatchRequestDto;
 import com.example.productcatalogservice.dtos.ProductRequestDto;
 import com.example.productcatalogservice.exceptions.AlreadyExistsException;
@@ -13,7 +14,11 @@ import com.example.productcatalogservice.models.ProductSpecification;
 import com.example.productcatalogservice.models.Status;
 import com.example.productcatalogservice.repository.CategoryRepository;
 import com.example.productcatalogservice.repository.ProductRepository;
+import com.example.productcatalogservice.utils.InventoryEventsGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +26,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ProductService implements IProductService {
 
@@ -33,6 +39,10 @@ public class ProductService implements IProductService {
     @Autowired
     CategoryService categoryService;
 
+    @Autowired
+    private InventoryEventsGenerator inventoryEventsGenerator;
+
+    @Transactional
     @Override
     public Product createProduct(ProductRequestDto productRequestDto) {
 
@@ -54,6 +64,16 @@ public class ProductService implements IProductService {
         product.setCreatedAt(currentTime);
         product.setUpdatedAt(currentTime);
         product.setStatus(Status.ACTIVE);
+
+        Product storedProduct = productRepository.save(product);
+
+        if (storedProduct.getId() == null) {
+            log.error("Error occurred while saving product: ");
+            throw new RuntimeException("Error occurred while saving product: " + product.getName() + " to database");
+        }
+
+        log.info("Product saved to database");
+        inventoryEventsGenerator.generateInventoryEvents(storedProduct);
 
         return productRepository.save(product);
     }
@@ -158,6 +178,16 @@ public class ProductService implements IProductService {
         } catch (Exception exception) {
             System.out.println(exception.getMessage());
             System.out.println("Product Exception");
+        }
+
+        if (newProducts.size() == 0) {
+            log.error("Error occurred while saving products");
+            throw new RuntimeException("Error occurred while saving products to database");
+        }
+
+        log.info("Products saved to database");
+        for (Product product : newProducts) {
+            inventoryEventsGenerator.generateInventoryEvents(product);
         }
 
         return newProducts;
