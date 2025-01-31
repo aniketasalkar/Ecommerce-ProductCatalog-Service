@@ -17,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productCategoryService")
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProductController {
 
     @Autowired
@@ -114,6 +115,7 @@ public class ProductController {
     private ProductResponseDto from (Product product) {
         ProductResponseDto productResponseDto = new ProductResponseDto();
 
+        productResponseDto.setId(product.getId());
         productResponseDto.setName(product.getName());
         productResponseDto.setPrice(product.getPrice());
         productResponseDto.setDescription(product.getDescription());
